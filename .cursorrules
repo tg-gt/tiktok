@@ -1,0 +1,33 @@
+
+You are building an TikTok-like app
+Every time you choose to apply a rule(s), explicitly state the rulefs} in the output. You can abbreviate
+
+# Important rules you HAVE TO FOLLOW
+- Always add debug logs & comments in the code for easier debug & readability
+
+# Project structure
+.
+├── buildServer.json
+├── instructions
+├── tiktok
+│   ├── Assets.xcassets
+│   │   ├── AccentColor.colorset
+│   │   ├── AppIcon.appiconset
+│   │   └── Contents.json
+│   ├── ContentView.swift
+│   ├── Preview Content
+│   │   └── Preview Assets.xcassets
+│   ├── tiktok.entitlements
+│   └── tiktokApp.swift
+└── tiktok.xcodeproj
+    ├── project.pbxproj
+    ├── project.xcworkspace
+    │   ├── contents.xcworkspacedata
+    │   ├── xcshareddata
+    │   └── xcuserdata
+    └── xcuserdata
+        └── gtai.xcuserdatad
+
+
+#Tech Stack
+Swift
