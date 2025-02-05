@@ -1,6 +1,6 @@
-FlexibleAIVibeTok/
+tiktok/
 ├── App/
-│   └── FlexibleAIVibeTokApp.swift   // Main SwiftUI App entry point
+│   └── tiktokApp.swift   // Main SwiftUI App entry point
 ├── Models/
 │   ├── User.swift                   // Firestore user model
 │   └── Video.swift                  // Firestore video model
