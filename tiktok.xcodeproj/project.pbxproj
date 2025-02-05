@@ -10,9 +10,11 @@
 		604205E32D542C980017E056 /* FirebaseAuth in Frameworks */ = {isa = PBXBuildFile; productRef = 604205E22D542C980017E056 /* FirebaseAuth */; };
 		604205E52D542C980017E056 /* FirebaseFirestore in Frameworks */ = {isa = PBXBuildFile; productRef = 604205E42D542C980017E056 /* FirebaseFirestore */; };
 		604205E72D542C980017E056 /* FirebaseStorage in Frameworks */ = {isa = PBXBuildFile; productRef = 604205E62D542C980017E056 /* FirebaseStorage */; };
+		604205E92D542FC30017E056 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 604205E82D542FC30017E056 /* GoogleService-Info.plist */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		604205E82D542FC30017E056 /* GoogleService-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
 		608B7AD22D51665000F8E01F /* tiktok.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tiktok.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -41,6 +43,7 @@
 		608B7AC92D51665000F8E01F = {
 			isa = PBXGroup;
 			children = (
+				604205E82D542FC30017E056 /* GoogleService-Info.plist */,
 				608B7AD42D51665000F8E01F /* tiktok */,
 				608B7AD32D51665000F8E01F /* Products */,
 			);
@@ -124,6 +127,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				604205E92D542FC30017E056 /* GoogleService-Info.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
