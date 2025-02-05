@@ -1,33 +1,59 @@
 
 You are building an TikTok-like app
-Every time you choose to apply a rule(s), explicitly state the rulefs} in the output. You can abbreviate
+Every time you choose to apply a rule(s), explicitly state the rule in the output. You can abbreviate
 
 # Important rules you HAVE TO FOLLOW
 - Always add debug logs & comments in the code for easier debug & readability
 
 # Project structure
 .
+├── GoogleService-Info.plist
 ├── buildServer.json
 ├── instructions
+│   ├── checklist.md
+│   ├── hybrid-PRD.md
+│   ├── o1-refined-hybrid-checklist.md
+│   └── recommended-structure.md
 ├── tiktok
-│   ├── Assets.xcassets
-│   │   ├── AccentColor.colorset
-│   │   ├── AppIcon.appiconset
-│   │   └── Contents.json
-│   ├── ContentView.swift
-│   ├── Preview Content
-│   │   └── Preview Assets.xcassets
-│   ├── tiktok.entitlements
-│   └── tiktokApp.swift
+│   ├── App
+│   │   └── tiktokApp.swift
+│   ├── Assets.xcassets
+│   │   ├── AccentColor.colorset
+│   │   │   └── Contents.json
+│   │   ├── AppIcon.appiconset
+│   │   │   └── Contents.json
+│   │   └── Contents.json
+│   ├── Models
+│   │   ├── User.swift
+│   │   └── Video.swift
+│   ├── Preview Content
+│   │   └── Preview Assets.xcassets
+│   │       └── Contents.json
+│   ├── Services
+│   │   └── FirebaseService.swift
+│   ├── Utils
+│   │   └── Logger.swift
+│   ├── ViewModels
+│   │   ├── AuthViewModel.swift
+│   │   ├── FeedViewModel.swift
+│   │   └── VideoDetailView.swift
+│   ├── Views
+│   │   ├── AuthView.swift
+│   │   ├── FeedView.swift
+│   │   └── VideoDetailViewModel.swift
+│   ├── tiktok.entitlements
+│   └── tiktokApp.swift
 └── tiktok.xcodeproj
     ├── project.pbxproj
     ├── project.xcworkspace
-    │   ├── contents.xcworkspacedata
-    │   ├── xcshareddata
-    │   └── xcuserdata
+    │   ├── contents.xcworkspacedata
+    │   ├── xcshareddata
+    │   │   └── swiftpm
+    │   └── xcuserdata
+    │       └── gtai.xcuserdatad
     └── xcuserdata
         └── gtai.xcuserdatad
-
+            └── xcschemes
 
 #Tech Stack
 Swift

@@ -6,9 +6,22 @@
 //
 
 import SwiftUI
+import FirebaseCore
 
 @main
 struct tiktokApp: App {
+    // MARK: - Initialization
+    init() {
+        // Debug log for tracking app initialization
+        print("DEBUG: Configuring Firebase...")
+        
+        // Configure Firebase when app launches
+        FirebaseApp.configure()
+        
+        // Debug log to confirm Firebase configuration
+        print("DEBUG: Firebase configuration complete")
+    }
+
     var body: some Scene {
         WindowGroup {
             FeedView()
