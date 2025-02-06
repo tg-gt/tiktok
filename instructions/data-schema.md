@@ -10,7 +10,7 @@ interface User {
   email: string;           // User's email address
   displayName: string;    // Optional display name
   interests?: string[];    // Array of interest categories (for Week 2)
-  avatarURL?: string;    // Array of interest categories (for Week 2)
+  avatarURL?: string;    // Avatar URL
   createdAt: Timestamp;    // Account creation timestamp
 }
 ```

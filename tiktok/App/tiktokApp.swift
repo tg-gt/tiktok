@@ -31,8 +31,7 @@ struct tiktokApp: App {
             Group {
                 switch authViewModel.authState {
                 case .signedIn:
-                    // TODO: Replace with FeedView when implemented
-                    Text("Welcome \(authViewModel.user?.displayName ?? "User")!")
+                    FeedView()
                         .environmentObject(authViewModel)
                 case .signedOut:
                     AuthView()
