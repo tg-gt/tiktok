@@ -5,8 +5,8 @@
 - [x] Install Firebase SDK via Swift Package Manager
 - [x] Configure Firebase in App struct
 - [ ] Set up Firebase Console project
-  - [ ] Create new Firebase project
-  - [ ] Add iOS bundle ID
+  - [x] Create new Firebase project
+  - [x] Add iOS bundle ID
   - [x] Download and add GoogleService-Info.plist
   - [ ] Enable Firestore
   - [ ] Enable Firebase Auth
