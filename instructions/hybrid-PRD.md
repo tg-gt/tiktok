@@ -130,8 +130,9 @@ Below is a simplified PRD that meets your Week 1 MVP requirements while laying a
   - `userId` (string)  
   - `email` (string)  
   - `displayName` (string)  
-  - `interests` (array of strings, e.g. `[ "Comedy", "News", "Surreal" ]`) – to be used in Week 2  
+  - `interests` (array of strings, e.g. `[ "Comedy", "News", "Surreal" ]`) – to be used in 
   - `createdAt` (timestamp)
+  - `avatarURL` (string) – Avatar URL
 
 #### 2. Videos (`/videos/{videoId}`)
 - **Fields:**  

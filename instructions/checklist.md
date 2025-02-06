@@ -8,11 +8,11 @@
   - [x] Create new Firebase project
   - [x] Add iOS bundle ID
   - [x] Download and add GoogleService-Info.plist
-  - [ ] Enable Firestore
-  - [ ] Enable Firebase Auth
+  - [x] Enable Firestore
+  - [x] Enable Firebase Auth
 
 ## B. Authentication
-- [ ] Enable Email/Password auth in Firebase Console
+- [x] Enable Email/Password auth in Firebase Console
 - [ ] Implement AuthView
   - [ ] Create login form
   - [ ] Create registration form
