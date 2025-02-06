@@ -7,6 +7,7 @@
 
 import SwiftUI
 import FirebaseCore
+import FirebaseAnalytics
 
 @main
 struct tiktokApp: App {
