@@ -15,7 +15,7 @@ struct Video: Identifiable, Codable {
     let title: String
     let thumbnailUrl: String?
     let videoUrl: String
-    var category: [String]?
+    var category: [String]?  // Changed back to array of strings
     var likesCount: Int
     var commentsCount: Int
     let createdAt: Date

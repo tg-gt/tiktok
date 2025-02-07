@@ -70,8 +70,8 @@ struct VideoCardView: View {
                     .padding(.horizontal)
                 
                 // Category Tag
-                if let categories = video.category, !categories.isEmpty {
-                    Text(categories.joined(separator: ", "))
+                if let category = video.category, !category.isEmpty {
+                    Text(category)
                         .font(.caption)
                         .padding(.horizontal, 8)
                         .padding(.vertical, 4)

@@ -57,7 +57,7 @@ export const onVideoUpload = onObjectFinalized(async (event) => {
     const videoData = {
       videoUrl: signedUrl,
       title: docId,
-      category: "Default",
+      category: ["Default"],
       likesCount: 0,
       commentsCount: 0,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
