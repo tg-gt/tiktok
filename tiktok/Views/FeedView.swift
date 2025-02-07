@@ -27,7 +27,7 @@ struct FeedView: View {
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .ignoresSafeArea()
-            .onChange(of: viewModel.currentVideoIndex) { newIndex in
+            .onChange(of: viewModel.currentVideoIndex) { oldIndex, newIndex in
                 viewModel.videoDidChange(to: newIndex)
             }
         }
@@ -70,13 +70,15 @@ struct VideoCardView: View {
                     .padding(.horizontal)
                 
                 // Category Tag
-                Text(video.category)
-                    .font(.caption)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 4)
-                    .background(Color.black.opacity(0.5))
-                    .cornerRadius(4)
-                    .padding(.horizontal)
+                if let categories = video.category, !categories.isEmpty {
+                    Text(categories.joined(separator: ", "))
+                        .font(.caption)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 4)
+                        .background(Color.black.opacity(0.5))
+                        .cornerRadius(4)
+                        .padding(.horizontal)
+                }
             }
             .padding(.bottom, 50)
             

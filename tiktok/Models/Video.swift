@@ -60,10 +60,10 @@ struct Video: Identifiable, Codable {
         return """
         Video(id: \(id ?? "nil"),
               title: \(title),
-              category: \(category),
+              category: \(category?.description ?? "nil"),
               likes: \(likesCount),
               comments: \(commentsCount),
-              userId: \(userId))
+              userId: \(userId ?? "nil"))
         """
     }
 }
