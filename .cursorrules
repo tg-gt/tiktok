@@ -9,6 +9,17 @@ Every time you choose to apply a rule(s), explicitly state the rule in the outpu
 .
 ├── GoogleService-Info.plist
 ├── buildServer.json
+├── functions
+│   ├── lib
+│   │   ├── index.js
+│   │   └── index.js.map
+│   ├── node_modules  [485 entries exceeds filelimit, not opening dir]
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── src
+│   │   └── index.ts
+│   ├── tsconfig.dev.json
+│   └── tsconfig.json
 ├── instructions
 │   ├── checklist.md
 │   ├── hybrid-PRD.md
