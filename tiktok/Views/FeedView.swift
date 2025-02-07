@@ -13,22 +13,31 @@ struct FeedView: View {
     // MARK: - Properties
     @StateObject private var viewModel = FeedViewModel()
     @State private var player: AVPlayer?
+    @State private var selectedIndex = 0
     
     // MARK: - Body
     var body: some View {
         GeometryReader { geometry in
-            TabView(selection: $viewModel.currentVideoIndex) {
-                ForEach(Array(viewModel.videos.enumerated()), id: \.element.id) { index, video in
+            TabView(selection: $selectedIndex) {
+                ForEach(Array(viewModel.videos.enumerated()), id: \.offset) { index, video in
                     VideoCardView(video: video, player: player)
-                        .rotationEffect(.degrees(0)) // Fixes a SwiftUI TabView bug
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .tag(index)
+                        .onAppear {
+                            print("DEBUG: Video at index \(index) appeared. Video Title: \(video.title)")
+                        }
+                        .onDisappear {
+                            print("DEBUG: Video at index \(index) disappeared")
+                        }
                 }
             }
-            .tabViewStyle(.page(indexDisplayMode: .never))
-            .ignoresSafeArea()
-            .onChange(of: viewModel.currentVideoIndex) { oldIndex, newIndex in
+            .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
+            .onChange(of: selectedIndex) { newIndex in
+                print("DEBUG: Swiped to new index: \(newIndex)")
                 viewModel.videoDidChange(to: newIndex)
+            }
+            .onAppear {
+                print("DEBUG: FeedView appeared. Total videos loaded: \(viewModel.videos.count)")
             }
         }
         .overlay(alignment: .center) {
@@ -44,6 +53,7 @@ struct FeedView: View {
                     .padding()
             }
         }
+        .background(Color.black)
     }
 }
 

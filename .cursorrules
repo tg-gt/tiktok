@@ -1,6 +1,5 @@
 
 You are building an TikTok-like app
-Every time you choose to apply a rule(s), explicitly state the rule in the output. You can abbreviate
 
 # Important rules you HAVE TO FOLLOW
 - Always add debug logs & comments in the code for easier debug & readability

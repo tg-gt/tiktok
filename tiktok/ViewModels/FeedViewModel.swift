@@ -65,10 +65,7 @@ class FeedViewModel: ObservableObject {
             let snapshot = try await query.getDocuments()
             print("DEBUG: Fetched \(snapshot.documents.count) documents from Firestore")
             
-            // Update last document for pagination
-            lastDocument = snapshot.documents.last
-            
-            // Parse videos
+            // Parse videos from Firestore
             let newVideos = snapshot.documents.compactMap { document -> Video? in
                 print("DEBUG: Processing document: \(document.documentID)")
                 do {
@@ -81,18 +78,23 @@ class FeedViewModel: ObservableObject {
                     return nil
                 }
             }
-            
-            // Append new videos
-            if lastDocument == nil {
-                // First page, replace all videos
-                print("DEBUG: Setting initial videos array with \(newVideos.count) videos")
-                videos = newVideos
+
+            // If no new videos are fetched, log and retain current videos
+            if newVideos.isEmpty {
+                print("DEBUG: No new videos fetched; retaining current videos.")
             } else {
-                // Subsequent pages, append
-                print("DEBUG: Appending \(newVideos.count) new videos to existing \(videos.count) videos")
-                videos.append(contentsOf: newVideos)
+                // If it's an initial load, set the videos; otherwise, append the newVideos.
+                if videos.isEmpty {
+                    print("DEBUG: Setting initial videos array with \(newVideos.count) videos")
+                    videos = newVideos
+                } else {
+                    print("DEBUG: Appending \(newVideos.count) new videos to existing \(videos.count) videos")
+                    videos.append(contentsOf: newVideos)
+                }
+                // Update lastDocument for pagination if new videos were fetched.
+                lastDocument = snapshot.documents.last
             }
-            
+
             print("DEBUG: Total videos after fetch: \(videos.count)")
             
         } catch {
@@ -117,8 +119,18 @@ class FeedViewModel: ObservableObject {
     
     /// Handle video index change
     func videoDidChange(to index: Int) {
-        currentVideoIndex = index
-        loadMoreIfNeeded(currentIndex: index)
+        print("DEBUG: videoDidChange triggered for index \(index); current videos count: \(videos.count)")
+        // Only trigger fetch if the user is nearing the end of the current videos list.
+        guard index >= videos.count - 1 else {
+            print("DEBUG: Not at the end of the list. No fetch triggered.")
+            return
+        }
+
+        // Trigger fetching additional videos (pagination)
+        print("DEBUG: Fetching next page after last video")
+        Task {
+            await fetchVideos()
+        }
     }
     
     /// Refresh the feed
