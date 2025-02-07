@@ -25,6 +25,7 @@ class FeedViewModel: ObservableObject {
     
     // MARK: - Init
     init() {
+        print("DEBUG: FeedViewModel initialized")
         // Load initial batch of videos
         Task {
             await fetchVideos()
@@ -35,12 +36,17 @@ class FeedViewModel: ObservableObject {
     
     /// Fetch next batch of videos
     func fetchVideos() async {
-        guard !isLoadingMore else { return }
+        guard !isLoadingMore else {
+            print("DEBUG: Already loading more videos, skipping fetch")
+            return
+        }
         
         do {
             isLoading = true
             isLoadingMore = true
             error = nil
+            
+            print("DEBUG: Starting to fetch videos. Current count: \(videos.count)")
             
             // Create query
             var query = db.collection("videos")
@@ -50,33 +56,49 @@ class FeedViewModel: ObservableObject {
             // If we have a last document, start after it
             if let lastDocument = lastDocument {
                 query = query.start(afterDocument: lastDocument)
+                print("DEBUG: Fetching next page after document: \(lastDocument.documentID)")
+            } else {
+                print("DEBUG: Fetching first page of videos")
             }
             
             // Fetch videos
             let snapshot = try await query.getDocuments()
+            print("DEBUG: Fetched \(snapshot.documents.count) documents from Firestore")
             
             // Update last document for pagination
             lastDocument = snapshot.documents.last
             
             // Parse videos
             let newVideos = snapshot.documents.compactMap { document -> Video? in
-                try? document.data(as: Video.self)
+                print("DEBUG: Processing document: \(document.documentID)")
+                do {
+                    let video = try document.data(as: Video.self)
+                    print("DEBUG: Successfully parsed video: \(video.debugDescription)")
+                    return video
+                } catch {
+                    print("DEBUG: Failed to parse video document: \(error.localizedDescription)")
+                    print("DEBUG: Document data: \(document.data())")
+                    return nil
+                }
             }
             
             // Append new videos
             if lastDocument == nil {
                 // First page, replace all videos
+                print("DEBUG: Setting initial videos array with \(newVideos.count) videos")
                 videos = newVideos
             } else {
                 // Subsequent pages, append
+                print("DEBUG: Appending \(newVideos.count) new videos to existing \(videos.count) videos")
                 videos.append(contentsOf: newVideos)
             }
             
-            print("DEBUG: Fetched \(newVideos.count) videos")
+            print("DEBUG: Total videos after fetch: \(videos.count)")
             
         } catch {
             self.error = error.localizedDescription
             print("DEBUG: Error fetching videos: \(error.localizedDescription)")
+            print("DEBUG: Detailed error: \(error)")
         }
         
         isLoading = false
