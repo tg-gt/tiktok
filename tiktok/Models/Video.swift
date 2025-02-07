@@ -13,13 +13,13 @@ struct Video: Identifiable, Codable {
     // MARK: - Properties
     @DocumentID var id: String?  // Firebase document ID
     let title: String
-    let thumbnailUrl: String
+    let thumbnailUrl: String?
     let videoUrl: String
-    let category: String
+    let category: [String]?
     var likesCount: Int
     var commentsCount: Int
     let createdAt: Date
-    let userId: String  // Reference to creator
+    let userId: String?  // Reference to creator
     
     // MARK: - Computed Properties
     var formattedLikes: String {

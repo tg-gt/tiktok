@@ -19,14 +19,15 @@ interface User {
 **Path:** `/videos/{videoId}`
 ```typescript
 interface Video {
-  videoId: string;         // Unique video identifier
+  id: string;         // Unique video identifier
   title: string;          // Video title
-  thumbnailUrl: string;   // URL to video thumbnail in Firebase Storage
+  thumbnailUrl?: string;   // URL to video thumbnail in Firebase Storage
   videoUrl: string;       // URL to video file in Firebase Storage
-  category: string;       // Video category/theme
+  category?: string[];       // Video category/theme
   likesCount: number;     // Total number of likes
   commentsCount: number;  // Total number of comments
   createdAt: Timestamp;   // Video creation timestamp
+  userId: string;         // Reference to creator
   modelUsed?: string;     // Optional: AI model used to generate (for Week 2)
 }
 ```

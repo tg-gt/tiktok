@@ -55,10 +55,9 @@ export const onVideoUpload = onObjectFinalized(async (event) => {
   // 5. Firestore Document Creation (with error handling):
   try {
     const videoData = {
-      videoId: docId,
       videoUrl: signedUrl,
-      title: docId, // Consider extracting a better title from metadata if possible
-      category: "Default", //  Allow users to set this, or use metadata
+      title: docId,
+      category: "Default",
       likesCount: 0,
       commentsCount: 0,
       createdAt: admin.firestore.FieldValue.serverTimestamp(),
