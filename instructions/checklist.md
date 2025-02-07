@@ -13,22 +13,22 @@
 
 ## B. Authentication
 - [x] Enable Email/Password auth in Firebase Console
-- [ ] Implement AuthView
-  - [ ] Create login form
-  - [ ] Create registration form
-  - [ ] Implement sign-up functionality
-  - [ ] Implement sign-in functionality
-- [ ] Set up user profiles in Firestore
-  - [ ] Create users collection
-  - [ ] Store user data on successful registration
+- [x] Implement AuthView
+  - [x] Create login form
+  - [x] Create registration form
+  - [x] Implement sign-up functionality
+  - [x] Implement sign-in functionality
+- [x] Set up user profiles in Firestore
+  - [x] Create users collection
+  - [x] Store user data on successful registration
 - [ ] Implement auth state navigation flow
 
 ## C. Video Feed
-- [ ] Create Video data model
-- [ ] Implement FeedViewModel
-  - [ ] Set up Firestore video fetching
+- [x] Create Video data model
+- [x] Implement FeedViewModel
+  - [x] Set up Firestore video fetching
   - [ ] Implement pagination (if needed)
-- [ ] Create FeedView UI
+- [x] Create FeedView UI
   - [ ] Design video card layout
   - [ ] Implement thumbnail loading
   - [ ] Add engagement stats display
