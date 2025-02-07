@@ -70,14 +70,17 @@ struct VideoCardView: View {
                     .padding(.horizontal)
                 
                 // Category Tag
-                if let category = video.category, !category.isEmpty {
-                    Text(category)
-                        .font(.caption)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.black.opacity(0.5))
-                        .cornerRadius(4)
-                        .padding(.horizontal)
+                if let categories = video.category, !categories.isEmpty {
+                    let categoryText = categories.joined(separator: ", ")
+                    if !categoryText.isEmpty {
+                        Text(categoryText)
+                            .font(.caption)
+                            .padding(.horizontal, 8)
+                            .padding(.vertical, 4)
+                            .background(Color.black.opacity(0.5))
+                            .cornerRadius(4)
+                            .padding(.horizontal)
+                    }
                 }
             }
             .padding(.bottom, 50)
