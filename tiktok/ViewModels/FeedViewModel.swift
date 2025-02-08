@@ -17,6 +17,8 @@ class FeedViewModel: ObservableObject {
     @Published var isLoading = false
     @Published var error: String?
     @Published var currentVideoIndex = 0
+    @Published var showComments = false
+    @Published var selectedVideoId: String?
     
     private let db = Firestore.firestore()
     private var lastDocument: DocumentSnapshot?
@@ -33,6 +35,39 @@ class FeedViewModel: ObservableObject {
     }
     
     // MARK: - Public Methods
+    
+    /// Toggle like for a video
+    func toggleVideoLike(videoId: String) async {
+        guard let index = videos.firstIndex(where: { $0.id == videoId }) else {
+            print("DEBUG: Video not found for liking: \(videoId)")
+            return
+        }
+        
+        do {
+            print("DEBUG: Toggling like for video: \(videoId)")
+            
+            // TODO: Implement proper like/unlike logic with user tracking
+            try await db.collection("videos").document(videoId).updateData([
+                "likesCount": FieldValue.increment(Int64(1))
+            ])
+            
+            // Refresh the video data
+            let documentSnapshot = try await db.collection("videos").document(videoId).getDocument()
+            if let updatedVideo = try? documentSnapshot.data(as: Video.self) {
+                videos[index] = updatedVideo
+            }
+            
+        } catch {
+            self.error = error.localizedDescription
+            print("DEBUG: Error toggling video like: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Show comments for a video
+    func showCommentsForVideo(videoId: String) {
+        selectedVideoId = videoId
+        showComments = true
+    }
     
     /// Fetch next batch of videos
     func fetchVideos() async {

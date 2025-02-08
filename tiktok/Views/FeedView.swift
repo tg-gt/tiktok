@@ -20,7 +20,7 @@ struct FeedView: View {
         GeometryReader { geometry in
             TabView(selection: $selectedIndex) {
                 ForEach(Array(viewModel.videos.enumerated()), id: \.offset) { index, video in
-                    VideoCardView(video: video, player: player)
+                    VideoCardView(video: video, player: player, viewModel: viewModel)
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .tag(index)
                         .onAppear {
@@ -54,6 +54,12 @@ struct FeedView: View {
             }
         }
         .background(Color.black)
+        .sheet(isPresented: $viewModel.showComments) {
+            if let videoId = viewModel.selectedVideoId {
+                CommentView(videoId: videoId)
+                    .presentationDetents([.medium, .large])
+            }
+        }
     }
 }
 
@@ -62,6 +68,7 @@ struct VideoCardView: View {
     // MARK: - Properties
     let video: Video
     let player: AVPlayer?
+    @ObservedObject var viewModel: FeedViewModel
     @State private var isLiked = false
     
     // MARK: - Body
@@ -98,7 +105,14 @@ struct VideoCardView: View {
             // Engagement Buttons
             VStack(spacing: 20) {
                 // Like Button
-                Button(action: { isLiked.toggle() }) {
+                Button(action: {
+                    isLiked.toggle()
+                    if let id = video.id {
+                        Task {
+                            await viewModel.toggleVideoLike(videoId: id)
+                        }
+                    }
+                }) {
                     VStack(spacing: 4) {
                         Image(systemName: isLiked ? "heart.fill" : "heart")
                             .foregroundColor(isLiked ? .red : .white)
@@ -110,7 +124,12 @@ struct VideoCardView: View {
                 }
                 
                 // Comment Button
-                Button(action: {}) {
+                Button(action: {
+                    print("DEBUG: Comment button tapped for video: \(video.id ?? "unknown")")
+                    if let id = video.id {
+                        viewModel.showCommentsForVideo(videoId: id)
+                    }
+                }) {
                     VStack(spacing: 4) {
                         Image(systemName: "bubble.right")
                             .font(.system(size: 30))
