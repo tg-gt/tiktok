@@ -7,6 +7,7 @@
 
 import Foundation
 import FirebaseFirestore
+import FirebaseAuth
 import Combine
 
 // MARK: - Feed View Model
@@ -38,6 +39,11 @@ class FeedViewModel: ObservableObject {
     
     /// Toggle like for a video
     func toggleVideoLike(videoId: String) async {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            print("DEBUG: No authenticated user found")
+            return
+        }
+        
         guard let index = videos.firstIndex(where: { $0.id == videoId }) else {
             print("DEBUG: Video not found for liking: \(videoId)")
             return
@@ -46,10 +52,32 @@ class FeedViewModel: ObservableObject {
         do {
             print("DEBUG: Toggling like for video: \(videoId)")
             
-            // TODO: Implement proper like/unlike logic with user tracking
-            try await db.collection("videos").document(videoId).updateData([
-                "likesCount": FieldValue.increment(Int64(1))
-            ])
+            // Check if user already liked the video
+            let likeRef = db.collection("videoLikes")
+                .document(videoId)
+                .collection("userLikes")
+                .document(userId)
+            
+            let likeDoc = try await likeRef.getDocument()
+            
+            if likeDoc.exists {
+                // Unlike: Remove the like document and decrement count
+                try await likeRef.delete()
+                try await db.collection("videos").document(videoId).updateData([
+                    "likesCount": FieldValue.increment(Int64(-1))
+                ])
+                print("DEBUG: Removed like for video: \(videoId)")
+            } else {
+                // Like: Add like document and increment count
+                try await likeRef.setData([
+                    "userId": userId,
+                    "likedAt": Timestamp()
+                ])
+                try await db.collection("videos").document(videoId).updateData([
+                    "likesCount": FieldValue.increment(Int64(1))
+                ])
+                print("DEBUG: Added like for video: \(videoId)")
+            }
             
             // Refresh the video data
             let documentSnapshot = try await db.collection("videos").document(videoId).getDocument()
@@ -60,6 +88,26 @@ class FeedViewModel: ObservableObject {
         } catch {
             self.error = error.localizedDescription
             print("DEBUG: Error toggling video like: \(error.localizedDescription)")
+        }
+    }
+    
+    /// Check if user has liked a video
+    func checkIfVideoLiked(videoId: String) async -> Bool {
+        guard let userId = Auth.auth().currentUser?.uid else {
+            return false
+        }
+        
+        do {
+            let likeDoc = try await db.collection("videoLikes")
+                .document(videoId)
+                .collection("userLikes")
+                .document(userId)
+                .getDocument()
+            
+            return likeDoc.exists
+        } catch {
+            print("DEBUG: Error checking video like status: \(error.localizedDescription)")
+            return false
         }
     }
     

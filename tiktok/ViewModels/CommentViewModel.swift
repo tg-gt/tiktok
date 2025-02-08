@@ -39,8 +39,9 @@ class CommentViewModel: ObservableObject {
             
             print("DEBUG: Fetching comments for video: \(videoId)")
             
-            let snapshot = try await db.collection("comments")
-                .whereField("videoId", isEqualTo: videoId)
+            let snapshot = try await db.collection("videos")
+                .document(videoId)
+                .collection("comments")
                 .order(by: "createdAt", descending: true)
                 .getDocuments()
             
@@ -83,8 +84,11 @@ class CommentViewModel: ObservableObject {
                 likesCount: 0
             )
             
-            // Add to Firestore
-            let ref = try db.collection("comments").addDocument(from: comment)
+            // Add to Firestore subcollection
+            let ref = try db.collection("videos")
+                .document(videoId)
+                .collection("comments")
+                .addDocument(from: comment)
             print("DEBUG: Added comment with ID: \(ref.documentID)")
             
             // Update video's comment count
@@ -107,10 +111,14 @@ class CommentViewModel: ObservableObject {
         do {
             print("DEBUG: Toggling like for comment: \(commentId)")
             
-            // TODO: Implement like/unlike logic with user tracking
-            try await db.collection("comments").document(commentId).updateData([
-                "likesCount": FieldValue.increment(Int64(1))
-            ])
+            // TODO: Implement like/unlike logic with user tracking in userLikes subcollection
+            try await db.collection("videos")
+                .document(videoId)
+                .collection("comments")
+                .document(commentId)
+                .updateData([
+                    "likesCount": FieldValue.increment(Int64(1))
+                ])
             
             await fetchComments()
             

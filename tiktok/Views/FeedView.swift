@@ -106,10 +106,11 @@ struct VideoCardView: View {
             VStack(spacing: 20) {
                 // Like Button
                 Button(action: {
-                    isLiked.toggle()
                     if let id = video.id {
                         Task {
                             await viewModel.toggleVideoLike(videoId: id)
+                            // Update local like state after toggle
+                            isLiked = await viewModel.checkIfVideoLiked(videoId: id)
                         }
                     }
                 }) {
@@ -144,6 +145,14 @@ struct VideoCardView: View {
             .frame(maxWidth: .infinity, alignment: .trailing)
         }
         .background(Color.black)
+        .onAppear {
+            // Check if user has liked this video when it appears
+            if let id = video.id {
+                Task {
+                    isLiked = await viewModel.checkIfVideoLiked(videoId: id)
+                }
+            }
+        }
     }
 }
 
