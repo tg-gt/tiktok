@@ -52,6 +52,14 @@ interface VideoLike {
 }
 ```
 
+**Design Note:** While comments are stored as a subcollection under each video document (`/videos/{videoId}/comments/{commentId}`), likes are intentionally stored in a separate root collection with their own subcollection structure (`/videoLikes/{videoId}/userLikes/{userId}`). This design choice enables:
+- Efficient querying of likes across all videos
+- Separate security rules for likes management
+- Better performance for high-traffic like operations
+- Reduced contention on video documents
+
+Both approaches (subcollections under videos vs. separate root collection) are valid Firestore patterns, and the choice depends on the specific access patterns and scalability requirements of the feature.
+
 ### 5. Saved Videos Subcollection
 **Path:** `/users/{userId}/savedVideos/{videoId}`
 ```typescript
