@@ -221,5 +221,25 @@ class FeedViewModel: ObservableObject {
         lastDocument = nil  // Reset pagination
         await fetchVideos()
     }
+    
+    /// Refresh a single video's data
+    func refreshVideo(videoId: String) async {
+        guard let index = videos.firstIndex(where: { $0.id == videoId }) else {
+            print("DEBUG: Video not found for refresh: \(videoId)")
+            return
+        }
+        
+        do {
+            print("DEBUG: Refreshing video data for: \(videoId)")
+            let documentSnapshot = try await db.collection("videos").document(videoId).getDocument()
+            if let updatedVideo = try? documentSnapshot.data(as: Video.self) {
+                videos[index] = updatedVideo
+                print("DEBUG: Successfully refreshed video data")
+            }
+        } catch {
+            self.error = error.localizedDescription
+            print("DEBUG: Error refreshing video data: \(error.localizedDescription)")
+        }
+    }
 }
 

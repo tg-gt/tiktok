@@ -56,8 +56,15 @@ struct FeedView: View {
         .background(Color.black)
         .sheet(isPresented: $viewModel.showComments) {
             if let videoId = viewModel.selectedVideoId {
-                CommentView(videoId: videoId)
-                    .presentationDetents([.medium, .large])
+                CommentView(
+                    videoId: videoId,
+                    onCommentAdded: {
+                        Task {
+                            await viewModel.refreshVideo(videoId: videoId)
+                        }
+                    }
+                )
+                .presentationDetents([.medium, .large])
             }
         }
     }

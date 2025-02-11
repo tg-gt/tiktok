@@ -15,8 +15,8 @@ struct CommentView: View {
     @FocusState private var isInputFocused: Bool
     
     // MARK: - Init
-    init(videoId: String) {
-        _viewModel = StateObject(wrappedValue: CommentViewModel(videoId: videoId))
+    init(videoId: String, onCommentAdded: (() -> Void)? = nil) {
+        _viewModel = StateObject(wrappedValue: CommentViewModel(videoId: videoId, onCommentAdded: onCommentAdded))
     }
     
     // MARK: - Body

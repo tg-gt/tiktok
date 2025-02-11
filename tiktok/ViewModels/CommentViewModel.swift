@@ -19,11 +19,13 @@ class CommentViewModel: ObservableObject {
     
     private let db = Firestore.firestore()
     private let videoId: String
+    var onCommentAdded: (() -> Void)?
     
     // MARK: - Init
-    init(videoId: String) {
+    init(videoId: String, onCommentAdded: (() -> Void)? = nil) {
         print("DEBUG: CommentViewModel initialized for video: \(videoId)")
         self.videoId = videoId
+        self.onCommentAdded = onCommentAdded
         Task {
             await fetchComments()
         }
@@ -99,6 +101,9 @@ class CommentViewModel: ObservableObject {
             // Clear the text field and refresh comments
             newCommentText = ""
             await fetchComments()
+            
+            // Notify that a comment was added
+            onCommentAdded?()
             
         } catch {
             self.error = error.localizedDescription
