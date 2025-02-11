@@ -31,7 +31,7 @@ struct tiktokApp: App {
             Group {
                 switch authViewModel.authState {
                 case .signedIn:
-                    FeedView()
+                    MainTabView()
                         .environmentObject(authViewModel)
                 case .signedOut:
                     AuthView()

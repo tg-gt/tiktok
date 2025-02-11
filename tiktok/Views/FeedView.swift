@@ -24,7 +24,7 @@ struct FeedView: View {
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .tag(index)
                         .onAppear {
-                            print("DEBUG: Video at index \(index) appeared. Video Title: \(video.title)")
+                            print("DEBUG: Video at index \(index) appeared. Video Title: \(video.title ?? "Untitled")")
                         }
                         .onDisappear {
                             print("DEBUG: Video at index \(index) disappeared")
@@ -32,9 +32,9 @@ struct FeedView: View {
                 }
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
-            .onChange(of: selectedIndex) { newIndex in
-                print("DEBUG: Swiped to new index: \(newIndex)")
-                viewModel.videoDidChange(to: newIndex)
+            .onChange(of: selectedIndex) { oldValue, newValue in
+                print("DEBUG: Swiped to new index: \(newValue)")
+                viewModel.videoDidChange(to: newValue)
             }
             .onAppear {
                 print("DEBUG: FeedView appeared. Total videos loaded: \(viewModel.videos.count)")
@@ -82,13 +82,24 @@ struct VideoCardView: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             // Video Player
-            VideoPlayerView(url: URL(string: video.videoUrl)!)
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+            if let videoUrlString = video.videoUrl,
+               let videoUrl = URL(string: videoUrlString) {
+                VideoPlayerView(url: videoUrl)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+            } else {
+                // Fallback view when video URL is invalid
+                Rectangle()
+                    .fill(Color.black)
+                    .overlay {
+                        Text("Video Unavailable")
+                            .foregroundColor(.white)
+                    }
+            }
             
             // Overlay Content
             VStack(alignment: .leading, spacing: 10) {
                 // Title and Description
-                Text(video.title)
+                Text(video.title ?? "Untitled")
                     .font(.headline)
                     .foregroundColor(.white)
                     .padding(.horizontal)
@@ -168,6 +179,7 @@ struct VideoPlayerView: UIViewControllerRepresentable {
     let url: URL
     
     func makeUIViewController(context: Context) -> AVPlayerViewController {
+        print("DEBUG: Creating video player for URL: \(url)")
         let player = AVPlayer(url: url)
         let controller = AVPlayerViewController()
         controller.player = player
@@ -188,7 +200,9 @@ struct VideoPlayerView: UIViewControllerRepresentable {
         return controller
     }
     
-    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {}
+    func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
+        // No updates needed
+    }
 }
 
 // MARK: - Preview Provider

@@ -43,16 +43,16 @@
 
 ## E. User Engagement
 ### Likes
-- [ ] Set up likes data model
-- [ ] Implement like/unlike functionality
-- [ ] Update UI for like status
-- [ ] Handle like count updates
+- [x] Set up likes data model
+- [x] Implement like/unlike functionality
+- [x] Update UI for like status
+- [x] Handle like count updates
 
 ### Comments
-- [ ] Create comments data model
-- [ ] Implement comment creation
-- [ ] Display comments list
-- [ ] Update comment counts
+- [x] Create comments data model
+- [x] Implement comment creation
+- [x] Display comments list
+- [x] Update comment counts
 
 ## F. Video Bookmarking
 - [ ] Create saved videos data model
@@ -61,18 +61,18 @@
 - [ ] Set up saved videos retrieval
 
 ## G. Content Management
-- [ ] Set up Firebase Storage for videos
-- [ ] Create test content
-  - [ ] Upload sample videos
-  - [ ] Create corresponding Firestore documents
+- [x] Set up Firebase Storage for videos
+- [x] Create test content
+  - [x] Upload sample videos
+  - [x] Create corresponding Firestore documents
   - [ ] Add thumbnails
 
 ## H. Testing
 - [ ] Test user authentication flow
 - [ ] Verify video feed loading
 - [ ] Test video playback
-- [ ] Verify likes functionality
-- [ ] Test commenting system
+- [x] Verify likes functionality
+- [x] Test commenting system
 - [ ] Validate video saving
 - [ ] Check offline behavior
 - [ ] Test edge cases
