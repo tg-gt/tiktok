@@ -5,6 +5,7 @@ struct MainTabView: View {
     // MARK: - Properties
     @State private var selectedTab = 0
     @State private var showUploadSheet = false
+    @StateObject private var playerManager = VideoPlayerManager()
     
     // MARK: - Body
     var body: some View {
@@ -12,6 +13,7 @@ struct MainTabView: View {
             // Feed Tab
             NavigationStack {
                 FeedView()
+                    .environmentObject(playerManager)
             }
             .tabItem {
                 Image(systemName: selectedTab == 0 ? "house.fill" : "house")
@@ -47,9 +49,18 @@ struct MainTabView: View {
             UploadView()
         }
         .onChange(of: selectedTab) { oldValue, newValue in
+            print("DEBUG: Tab changed from \(oldValue) to \(newValue)")
+            if oldValue == 0 {
+                // Leaving feed tab, pause video
+                playerManager.pauseCurrentVideo()
+            } else if newValue == 0 {
+                // Returning to feed tab, resume video
+                playerManager.resumeCurrentVideo()
+            }
+            
             if newValue == 1 {
                 showUploadSheet = true
-                selectedTab = 0 // Reset to home tab
+                selectedTab = oldValue // Reset to previous tab
             }
         }
     }

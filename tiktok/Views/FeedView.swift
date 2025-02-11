@@ -11,33 +11,47 @@ import AVKit
 // MARK: - Feed View
 struct FeedView: View {
     // MARK: - Properties
-    @StateObject private var viewModel = FeedViewModel()
-    @State private var player: AVPlayer?
+    @EnvironmentObject private var playerManager: VideoPlayerManager
+    @StateObject private var viewModel: FeedViewModel
     @State private var selectedIndex = 0
+    @Environment(\.scenePhase) private var scenePhase
+    
+    // MARK: - Init
+    init() {
+        // Create FeedViewModel with a temporary manager
+        // The actual playerManager will be injected via environmentObject
+        let tempManager = VideoPlayerManager()
+        _viewModel = StateObject(wrappedValue: FeedViewModel(playerManager: tempManager))
+    }
     
     // MARK: - Body
     var body: some View {
         GeometryReader { geometry in
             TabView(selection: $selectedIndex) {
                 ForEach(Array(viewModel.videos.enumerated()), id: \.offset) { index, video in
-                    VideoCardView(video: video, player: player, viewModel: viewModel)
+                    VideoCardView(video: video, isCurrentVideo: index == selectedIndex, viewModel: viewModel)
                         .frame(width: geometry.size.width, height: geometry.size.height)
                         .tag(index)
-                        .onAppear {
-                            print("DEBUG: Video at index \(index) appeared. Video Title: \(video.title ?? "Untitled")")
-                        }
-                        .onDisappear {
-                            print("DEBUG: Video at index \(index) disappeared")
-                        }
                 }
             }
             .tabViewStyle(PageTabViewStyle(indexDisplayMode: .never))
             .onChange(of: selectedIndex) { oldValue, newValue in
-                print("DEBUG: Swiped to new index: \(newValue)")
-                viewModel.videoDidChange(to: newValue)
+                print("DEBUG: Swiped from index \(oldValue) to \(newValue)")
+                viewModel.playVideo(at: newValue)
             }
             .onAppear {
-                print("DEBUG: FeedView appeared. Total videos loaded: \(viewModel.videos.count)")
+                print("DEBUG: FeedView appeared")
+                // Update the viewModel's playerManager with the one from environment
+                viewModel.updatePlayerManager(playerManager)
+                Task {
+                    await viewModel.refresh()
+                }
+            }
+            .onChange(of: scenePhase) { oldPhase, newPhase in
+                print("DEBUG: Scene phase changed from \(oldPhase) to \(newPhase)")
+                if newPhase != .active {
+                    viewModel.pauseCurrentVideo()
+                }
             }
         }
         .overlay(alignment: .center) {
@@ -74,7 +88,7 @@ struct FeedView: View {
 struct VideoCardView: View {
     // MARK: - Properties
     let video: Video
-    let player: AVPlayer?
+    let isCurrentVideo: Bool
     @ObservedObject var viewModel: FeedViewModel
     @State private var isLiked = false
     
@@ -84,7 +98,7 @@ struct VideoCardView: View {
             // Video Player
             if let videoUrlString = video.videoUrl,
                let videoUrl = URL(string: videoUrlString) {
-                VideoPlayerView(url: videoUrl)
+                VideoPlayerView(url: videoUrl, isCurrentVideo: isCurrentVideo, viewModel: viewModel)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
                 // Fallback view when video URL is invalid
@@ -127,7 +141,6 @@ struct VideoCardView: View {
                     if let id = video.id {
                         Task {
                             await viewModel.toggleVideoLike(videoId: id)
-                            // Update local like state after toggle
                             isLiked = await viewModel.checkIfVideoLiked(videoId: id)
                         }
                     }
@@ -144,7 +157,6 @@ struct VideoCardView: View {
                 
                 // Comment Button
                 Button(action: {
-                    print("DEBUG: Comment button tapped for video: \(video.id ?? "unknown")")
                     if let id = video.id {
                         viewModel.showCommentsForVideo(videoId: id)
                     }
@@ -164,7 +176,6 @@ struct VideoCardView: View {
         }
         .background(Color.black)
         .onAppear {
-            // Check if user has liked this video when it appears
             if let id = video.id {
                 Task {
                     isLiked = await viewModel.checkIfVideoLiked(videoId: id)
@@ -177,31 +188,38 @@ struct VideoCardView: View {
 // MARK: - Video Player View
 struct VideoPlayerView: UIViewControllerRepresentable {
     let url: URL
+    let isCurrentVideo: Bool
+    @ObservedObject var viewModel: FeedViewModel
     
     func makeUIViewController(context: Context) -> AVPlayerViewController {
-        print("DEBUG: Creating video player for URL: \(url)")
-        let player = AVPlayer(url: url)
+        print("DEBUG: Creating player view for URL: \(url.lastPathComponent)")
         let controller = AVPlayerViewController()
-        controller.player = player
         controller.showsPlaybackControls = false
         controller.videoGravity = .resizeAspectFill
-        player.play()
         
-        // Loop video
-        NotificationCenter.default.addObserver(
-            forName: .AVPlayerItemDidPlayToEndTime,
-            object: player.currentItem,
-            queue: .main
-        ) { _ in
-            player.seek(to: .zero)
-            player.play()
+        if isCurrentVideo {
+            viewModel.prepareVideo(url: url, controller: controller)
         }
         
         return controller
     }
     
     func updateUIViewController(_ uiViewController: AVPlayerViewController, context: Context) {
-        // No updates needed
+        if isCurrentVideo {
+            // If the player is nil or has no current item, we need to reinitialize
+            if uiViewController.player == nil || uiViewController.player?.currentItem == nil {
+                print("DEBUG: Reinitializing player for URL: \(url.lastPathComponent)")
+                viewModel.prepareVideo(url: url, controller: uiViewController)
+            } else {
+                print("DEBUG: Updating existing player for URL: \(url.lastPathComponent)")
+                viewModel.prepareVideo(url: url, controller: uiViewController)
+            }
+        }
+    }
+    
+    static func dismantleUIViewController(_ uiViewController: AVPlayerViewController, coordinator: ()) {
+        print("DEBUG: Dismantling player view")
+        uiViewController.player = nil
     }
 }
 

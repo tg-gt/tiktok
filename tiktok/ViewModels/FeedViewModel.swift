@@ -9,6 +9,8 @@ import Foundation
 import FirebaseFirestore
 import FirebaseAuth
 import Combine
+import AVFoundation
+import AVKit
 
 // MARK: - Feed View Model
 @MainActor
@@ -26,9 +28,13 @@ class FeedViewModel: ObservableObject {
     private let pageSize = 5
     private var isLoadingMore = false
     
+    // Video player management
+    private var playerManager: VideoPlayerManager
+    
     // MARK: - Init
-    init() {
+    init(playerManager: VideoPlayerManager) {
         print("DEBUG: FeedViewModel initialized")
+        self.playerManager = playerManager
         // Load initial batch of videos
         Task {
             await fetchVideos()
@@ -36,6 +42,12 @@ class FeedViewModel: ObservableObject {
     }
     
     // MARK: - Public Methods
+    
+    /// Update the player manager
+    func updatePlayerManager(_ newManager: VideoPlayerManager) {
+        print("DEBUG: Updating player manager")
+        self.playerManager = newManager
+    }
     
     /// Toggle like for a video
     func toggleVideoLike(videoId: String) async {
@@ -63,9 +75,13 @@ class FeedViewModel: ObservableObject {
             if likeDoc.exists {
                 // Unlike: Remove the like document and decrement count
                 try await likeRef.delete()
-                try await db.collection("videos").document(videoId).updateData([
-                    "likesCount": FieldValue.increment(Int64(-1))
-                ])
+                await MainActor.run {
+                    Task {
+                        try await db.collection("videos").document(videoId).updateData([
+                            "likesCount": FieldValue.increment(Int64(-1))
+                        ])
+                    }
+                }
                 print("DEBUG: Removed like for video: \(videoId)")
             } else {
                 // Like: Add like document and increment count
@@ -73,9 +89,13 @@ class FeedViewModel: ObservableObject {
                     "userId": userId,
                     "likedAt": Timestamp()
                 ])
-                try await db.collection("videos").document(videoId).updateData([
-                    "likesCount": FieldValue.increment(Int64(1))
-                ])
+                await MainActor.run {
+                    Task {
+                        try await db.collection("videos").document(videoId).updateData([
+                            "likesCount": FieldValue.increment(Int64(1))
+                        ])
+                    }
+                }
                 print("DEBUG: Added like for video: \(videoId)")
             }
             
@@ -240,6 +260,19 @@ class FeedViewModel: ObservableObject {
             self.error = error.localizedDescription
             print("DEBUG: Error refreshing video data: \(error.localizedDescription)")
         }
+    }
+    
+    // MARK: - Video Playback
+    func prepareVideo(url: URL, controller: AVPlayerViewController) {
+        playerManager.prepareVideo(url: url, controller: controller)
+    }
+    
+    func playVideo(at index: Int) {
+        // Video switching is handled by the VideoPlayerView through prepareVideo
+    }
+    
+    func pauseCurrentVideo() {
+        playerManager.pauseCurrentVideo()
     }
 }
 
