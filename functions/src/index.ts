@@ -1,8 +1,9 @@
 import {onObjectFinalized} from "firebase-functions/v2/storage";
-import {onCall} from "firebase-functions/v2/https";
+import {onCall, HttpsError} from "firebase-functions/v2/https";
 import * as admin from "firebase-admin";
 import * as logger from "firebase-functions/logger";
-import fetch from "node-fetch";
+import {performFaceSwap} from "./services/faceSwapService.js";
+import {downloadFile, uploadToStorage} from "./utils/storage.js";
 
 admin.initializeApp();
 
@@ -136,89 +137,83 @@ export const onVideoUpload = onObjectFinalized(async (event) => {
   }
 });
 
+interface FaceSwapRequest {
+    sourceVideoUrl: string;
+    faceImageUrl: string;
+}
+
 // MARK: - Face Swap Function
-export const generateFaceSwap = onCall(async (data, context) => {
+export const generateFaceSwap = onCall<FaceSwapRequest>(async (request) => {
     // Log function invocation
-    logger.info("Face swap generation requested", { userId: context.auth?.uid });
+    const userId = request.auth?.uid;
+    logger.info("Face swap generation requested", { userId });
 
     // Authenticate request
-    if (!context.auth) {
+    if (!userId) {
         logger.error("Unauthorized face swap attempt");
-        throw new Error('Unauthorized');
+        throw new HttpsError("unauthenticated", "Must be authenticated to perform face swap");
     }
 
-    const {sourceVideoId, faceImageUrl} = data;
+    const {sourceVideoUrl, faceImageUrl} = request.data;
     
     // Validate input parameters
-    if (!sourceVideoId || !faceImageUrl) {
-        logger.error("Missing required parameters", { sourceVideoId, faceImageUrl });
-        throw new Error('Missing required parameters');
+    if (!sourceVideoUrl || !faceImageUrl) {
+        logger.error("Missing required parameters", { sourceVideoUrl, faceImageUrl });
+        throw new HttpsError("invalid-argument", "Missing sourceVideoUrl or faceImageUrl");
     }
 
     try {
-        // 1. Get source video URL from Firestore
-        logger.info("Fetching source video", { sourceVideoId });
-        const videoDoc = await admin.firestore().collection('videos').doc(sourceVideoId).get();
-        const videoData = videoDoc.data();
-        if (!videoData?.videoUrl) {
-            logger.error("Source video not found", { sourceVideoId });
-            throw new Error('Source video not found');
-        }
-
-        // 2. Create new video document with processing status
-        const newVideoRef = admin.firestore().collection('videos').doc();
+        // 1. Create new video document with processing status
+        const newVideoRef = admin.firestore().collection("videos").doc();
         const newVideoData = {
-            userId: context.auth.uid,
-            sourceVideoId,
-            status: 'processing',
-            title: `Face Swap of ${videoData.title || 'Video'}`,
-            description: `AI-generated face swap video`,
-            category: videoData.category || [],
+            userId,
+            status: "processing",
+            title: "Face Swap Video",
+            description: "AI-generated face swap video",
+            category: ["AI Generated"],
             createdAt: admin.firestore.FieldValue.serverTimestamp(),
             likesCount: 0,
             commentsCount: 0,
             isAIGenerated: true,
-            originalVideoUrl: videoData.videoUrl,
+            originalVideoUrl: sourceVideoUrl,
             faceImageUrl: faceImageUrl
         };
 
         logger.info("Creating new video document", { newVideoId: newVideoRef.id });
         await newVideoRef.set(newVideoData);
 
-        // 3. Extract first frame from source video
-        const firstFrame = await extractFirstFrame(videoData.videoUrl);
-        logger.info("First frame extracted", { firstFrame });
+        // 2. Perform face swap using Replicate
+        logger.info("Starting face swap process");
+        const swappedVideoUrl = await performFaceSwap(faceImageUrl, sourceVideoUrl);
 
-        // 4. Perform face swap on first frame
-        const faceSwapOutput = await callReplicate(FACE_SWAP_MODEL, {
-            source_image: firstFrame,
-            target_image: faceImageUrl,
-        });
-        logger.info("Face swap completed", { faceSwapOutput });
+        // 3. Download the swapped video and re-upload to our Storage
+        logger.info("Downloading swapped video for storage");
+        const videoBuffer = await downloadFile(swappedVideoUrl);
+        
+        // 4. Upload to our storage with a proper path
+        const storagePath = `face-swaps/${newVideoRef.id}.mp4`;
+        const finalVideoUrl = await uploadToStorage(
+            videoBuffer,
+            storagePath,
+            "video/mp4"
+        );
 
-        // 5. Generate video from face-swapped image
-        const videoOutput = await callReplicate(VIDEO_GEN_MODEL, {
-            image: faceSwapOutput,
-            motion_bucket_id: 127,  // Controls the amount of motion
-            fps: 24,
-        });
-        logger.info("Video generation completed", { videoOutput });
-
-        // 6. Update video document with result
+        // 5. Update video document with result
+        logger.info("Updating video document with results", { videoId: newVideoRef.id });
         await newVideoRef.update({
-            status: 'completed',
-            videoUrl: videoOutput,
-            thumbnailUrl: faceSwapOutput,  // Use the face-swapped first frame as thumbnail
+            status: "completed",
+            videoUrl: finalVideoUrl,
+            thumbnailUrl: faceImageUrl, // Use the face image as thumbnail for now
+            completedAt: admin.firestore.FieldValue.serverTimestamp()
         });
 
         return {
             success: true,
             videoId: newVideoRef.id,
-            status: 'completed',
-            videoUrl: videoOutput
+            videoUrl: finalVideoUrl
         };
-    } catch (error) {
-        logger.error('Face swap generation failed:', error);
-        throw new Error('Failed to generate face swap: ' + error.message);
+    } catch (error: any) {
+        logger.error("Face swap generation failed:", error);
+        throw new HttpsError("internal", "Failed to generate face swap", error.message);
     }
 });
