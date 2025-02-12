@@ -7,11 +7,17 @@
 
 import SwiftUI
 import AVKit
+import FirebaseFunctions
 
 struct VideoDetailView: View {
     // MARK: - Properties
     let video: Video
     @StateObject private var viewModel: VideoDetailViewModel
+    @State private var showingFaceImagePicker = false
+    @State private var selectedFaceImage: UIImage?
+    @State private var isProcessingFaceSwap = false
+    @State private var showError = false
+    @State private var errorMessage = ""
     
     // MARK: - Initialization
     init(video: Video) {
@@ -49,9 +55,89 @@ struct VideoDetailView: View {
             }
             .padding()
             
+            // Face Swap Button
+            if video.isAIGenerated != true {  // Show for all videos except AI-generated ones
+                Button(action: {
+                    showingFaceImagePicker = true
+                }) {
+                    HStack {
+                        Image(systemName: "face.dashed")
+                        Text("Face Swap")
+                    }
+                    .padding()
+                    .background(Color.blue)
+                    .foregroundColor(.white)
+                    .cornerRadius(8)
+                }
+                .disabled(isProcessingFaceSwap)
+            }
+            
+            // Processing indicator
+            if isProcessingFaceSwap {
+                ProgressView("Processing Face Swap...")
+            }
+            
             Spacer()
         }
         .navigationBarTitleDisplayMode(.inline)
+        .sheet(isPresented: $showingFaceImagePicker) {
+            ImagePicker(image: $selectedFaceImage, sourceType: .photoLibrary)
+                .onDisappear {
+                    if let image = selectedFaceImage {
+                        uploadFaceImageAndGenerateSwap(image)
+                    }
+                }
+        }
+        .alert("Error", isPresented: $showError) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text(errorMessage)
+        }
+    }
+    
+    private func uploadFaceImageAndGenerateSwap(_ image: UIImage) {
+        guard let imageData = image.jpegData(compressionQuality: 0.8) else {
+            errorMessage = "Failed to process image"
+            showError = true
+            return
+        }
+        
+        isProcessingFaceSwap = true
+        
+        // First upload the face image
+        Task {
+            do {
+                // Upload face image to Firebase Storage
+                let faceImageUrl = try await FirebaseService.shared.uploadImage(imageData, path: "face-images")
+                
+                // Call the face swap Cloud Function
+                let functions = Functions.functions()
+                let data: [String: Any] = [
+                    "sourceVideoId": video.id ?? "",
+                    "faceImageUrl": faceImageUrl
+                ]
+                
+                let result = try await functions.httpsCallable("generateFaceSwap").call(data)
+                
+                if let response = result.data as? [String: Any],
+                   let success = response["success"] as? Bool,
+                   success {
+                    print("Face swap generation started successfully")
+                } else {
+                    throw NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "Invalid response from server"])
+                }
+                
+                DispatchQueue.main.async {
+                    isProcessingFaceSwap = false
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    isProcessingFaceSwap = false
+                    errorMessage = "Failed to generate face swap: \(error.localizedDescription)"
+                    showError = true
+                }
+            }
+        }
     }
 }
 

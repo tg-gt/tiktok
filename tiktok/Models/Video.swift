@@ -22,6 +22,14 @@ struct Video: Identifiable, Codable {
     var commentsCount: Int
     let createdAt: Date
     
+    // MARK: - AI Generation Properties
+    var isAIGenerated: Bool?
+    var status: String?  // "processing", "completed", "failed"
+    var sourceVideoId: String?  // Original video ID if this is a face swap
+    var originalVideoUrl: String?  // URL of the source video
+    var faceImageUrl: String?  // URL of the face image used for swap
+    var generationError: String?  // Error message if generation failed
+    
     // MARK: - Computed Properties
     var formattedLikes: String {
         formatCount(likesCount)
@@ -43,6 +51,12 @@ struct Video: Identifiable, Codable {
         case likesCount
         case commentsCount
         case createdAt
+        case isAIGenerated
+        case status
+        case sourceVideoId
+        case originalVideoUrl
+        case faceImageUrl
+        case generationError
     }
     
     // MARK: - Helper Methods
