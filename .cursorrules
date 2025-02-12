@@ -46,11 +46,11 @@ You are building an TikTok-like app
 │   ├── ViewModels
 │   │   ├── AuthViewModel.swift
 │   │   ├── FeedViewModel.swift
-│   │   └── VideoDetailView.swift
+│   │   └── VideoDetailViewModel.swift
 │   ├── Views
 │   │   ├── AuthView.swift
 │   │   ├── FeedView.swift
-│   │   └── VideoDetailViewModel.swift
+│   │   └── VideoDetailView.swift
 │   ├── tiktok.entitlements
 │   └── tiktokApp.swift
 └── tiktok.xcodeproj
