@@ -18,6 +18,7 @@ struct VideoDetailView: View {
     @State private var isProcessingFaceSwap = false
     @State private var showError = false
     @State private var errorMessage = ""
+    @State private var player: AVPlayer?
     
     // MARK: - Initialization
     init(video: Video) {
@@ -27,71 +28,68 @@ struct VideoDetailView: View {
     
     // MARK: - Body
     var body: some View {
-        VStack {
-            if let videoURL = URL(string: video.videoUrl ?? "") {
-                VideoPlayer(player: AVPlayer(url: videoURL))
-                    .frame(height: 400)
+        ZStack {
+            // Video Player
+            if let url = URL(string: viewModel.swappedVideoUrl ?? viewModel.video.videoUrl ?? "") {
+                VideoPlayer(player: AVPlayer(url: url))
+                    .edgesIgnoringSafeArea(.all)
             }
             
-            VStack(alignment: .leading, spacing: 12) {
-                Text(video.title ?? "Untitled")
-                    .font(.title2)
-                    .fontWeight(.bold)
+            // Overlay Controls
+            VStack {
+                Spacer()
                 
-                if let description = video.description {
-                    Text(description)
-                        .font(.body)
-                        .foregroundColor(.gray)
-                }
-                
-                HStack {
-                    Label("\(video.likesCount)", systemImage: "heart.fill")
-                        .foregroundColor(.red)
-                    
-                    Label("\(video.commentsCount)", systemImage: "message.fill")
-                        .foregroundColor(.blue)
-                }
-                .font(.subheadline)
-            }
-            .padding()
-            
-            // Face Swap Button
-            if video.isAIGenerated != true {  // Show for all videos except AI-generated ones
+                // Face Swap Button
                 Button(action: {
-                    showingFaceImagePicker = true
+                    viewModel.showFaceSwapPicker = true
                 }) {
                     HStack {
-                        Image(systemName: "face.dashed")
+                        Image(systemName: "face.smiling")
                         Text("Face Swap")
                     }
-                    .padding()
-                    .background(Color.blue)
+                    .font(.headline)
                     .foregroundColor(.white)
-                    .cornerRadius(8)
+                    .padding()
+                    .background(Color.blue.opacity(0.8))
+                    .cornerRadius(25)
                 }
-                .disabled(isProcessingFaceSwap)
+                .padding(.bottom, 50)
+                .disabled(viewModel.isFaceSwapping)
             }
-            
-            // Processing indicator
-            if isProcessingFaceSwap {
-                ProgressView("Processing Face Swap...")
-            }
-            
-            Spacer()
         }
-        .navigationBarTitleDisplayMode(.inline)
-        .sheet(isPresented: $showingFaceImagePicker) {
-            ImagePicker(image: $selectedFaceImage, sourceType: .photoLibrary)
-                .onDisappear {
-                    if let image = selectedFaceImage {
-                        uploadFaceImageAndGenerateSwap(image)
+        .overlay(
+            // Loading Overlay
+            Group {
+                if viewModel.isFaceSwapping {
+                    Color.black.opacity(0.5)
+                        .edgesIgnoringSafeArea(.all)
+                        .overlay(
+                            VStack {
+                                ProgressView()
+                                    .scaleEffect(1.5)
+                                Text("Creating Face Swap...")
+                                    .foregroundColor(.white)
+                                    .padding(.top)
+                            }
+                        )
+                }
+            }
+        )
+        .sheet(isPresented: $viewModel.showFaceSwapPicker) {
+            ImagePicker(selectedImage: $viewModel.selectedFaceImage)
+                .onChange(of: viewModel.selectedFaceImage) { _ in
+                    if viewModel.selectedFaceImage != nil {
+                        viewModel.startFaceSwap()
+                        viewModel.showFaceSwapPicker = false
                     }
                 }
         }
-        .alert("Error", isPresented: $showError) {
-            Button("OK", role: .cancel) { }
+        .alert("Error", isPresented: $viewModel.showError) {
+            Button("OK", role: .cancel) {}
         } message: {
-            Text(errorMessage)
+            if let error = viewModel.error {
+                Text(error.localizedDescription)
+            }
         }
     }
     

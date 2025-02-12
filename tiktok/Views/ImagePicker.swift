@@ -1,39 +1,61 @@
 import SwiftUI
-import UIKit
+import PhotosUI
 
-struct ImagePicker: UIViewControllerRepresentable {
-    @Binding var image: UIImage?
-    let sourceType: UIImagePickerController.SourceType
+struct ImagePicker: View {
+    @Binding var selectedImage: UIImage?
+    @Environment(\.dismiss) private var dismiss
+    @State private var photosPickerItem: PhotosPickerItem?
     
-    func makeUIViewController(context: Context) -> UIImagePickerController {
-        let picker = UIImagePickerController()
-        picker.sourceType = sourceType
-        picker.delegate = context.coordinator
-        return picker
-    }
-    
-    func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
-    func makeCoordinator() -> Coordinator {
-        Coordinator(self)
-    }
-    
-    class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: ImagePicker
-        
-        init(_ parent: ImagePicker) {
-            self.parent = parent
-        }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
-            if let image = info[.originalImage] as? UIImage {
-                parent.image = image
+    var body: some View {
+        NavigationView {
+            VStack {
+                if let selectedImage {
+                    Image(uiImage: selectedImage)
+                        .resizable()
+                        .scaledToFit()
+                        .padding()
+                }
+                
+                PhotosPicker(selection: $photosPickerItem,
+                           matching: .images,
+                           photoLibrary: .shared()) {
+                    Text("Select Photo")
+                        .font(.headline)
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding()
+                        .background(Color.blue)
+                        .cornerRadius(10)
+                        .padding()
+                }
             }
-            picker.dismiss(animated: true)
+            .navigationTitle("Choose Face Image")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    if selectedImage != nil {
+                        Button("Done") {
+                            dismiss()
+                        }
+                    }
+                }
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") {
+                        selectedImage = nil
+                        dismiss()
+                    }
+                }
+            }
         }
-        
-        func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
-            picker.dismiss(animated: true)
+        .onChange(of: photosPickerItem) { _ in
+            Task {
+                if let data = try? await photosPickerItem?.loadTransferable(type: Data.self),
+                   let image = UIImage(data: data) {
+                    await MainActor.run {
+                        selectedImage = image
+                    }
+                }
+            }
         }
     }
 } 
