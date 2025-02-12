@@ -7,19 +7,18 @@ const replicate = new Replicate({
 });
 
 /**
- * Performs face swap operation using Replicate's roop_face_swap model
- * @param swapImageUrl URL of the face image to swap from
- * @param targetVideoUrl URL of the video to swap into
- * @returns Promise<string> URL of the generated video
+ * Performs face swap operation using Replicate's roop_face_swap model.
+ * @param {string} swapImageUrl - URL of the face image to swap from
+ * @param {string} targetVideoUrl - URL of the video to swap into
+ * @return {Promise<string>} A promise that resolves to the URL of the generated video
  */
 export async function performFaceSwap(
   swapImageUrl: string,
-  targetVideoUrl: string
+  targetVideoUrl: string,
 ): Promise<string> {
   logger.info("Starting face swap operation", { swapImageUrl, targetVideoUrl });
 
   try {
-    // Configure input for the roop_face_swap model
     const input = {
       swap_image: swapImageUrl,
       target_video: targetVideoUrl,
@@ -30,28 +29,25 @@ export async function performFaceSwap(
 
     logger.info("Calling Replicate API with input", input);
 
-    // Run the face swap model
-    const output = await replicate.run(
-      "arabyai-replicate/roop_face_swap:11b6bf0f4e14d808f655e87e5...",
-      { input }
-    );
+    // Split the model name so it doesn't exceed 80 chars
+    const modelName =
+      "arabyai-replicate/roop_face_swap:11b6bf0f4e14d808f655e87e5448233cceff10a45f659d71539cafb7163b2e84";
+    const output = await replicate.run(modelName, { input });
 
     if (!output) {
       logger.error("No output received from Replicate");
       throw new Error("No output from replicate");
     }
 
-    // Ensure output is a string (URL)
     if (typeof output !== "string") {
       logger.error("Unexpected output type from Replicate", { output });
       throw new Error("Unexpected output type from Replicate");
     }
 
     logger.info("Face swap completed successfully", { output });
-    
     return output;
   } catch (error) {
     logger.error("Face swap operation failed", error);
     throw error;
   }
-} 
+}
